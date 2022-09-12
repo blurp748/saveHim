@@ -134,8 +134,8 @@ for (let index = 0; index < minLength; index++) {
     for(let index2 in alphabetRef.value){
         if(alphabetRef.value[index2] == clueLetter){
             alphabetRef.value[index2] = ' ';
+            break;
         }
-        break;
     }
 }
 
