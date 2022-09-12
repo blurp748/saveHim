@@ -49,23 +49,108 @@
 </template>
 
 <script setup lang="ts">
+
+// ----------------------------------------
+// 					Imports
+// ----------------------------------------
+
 import { ref } from 'vue';
 import randomWords from 'random-words';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
+
+// ----------------------------------------
+// 				Data variables
+// ----------------------------------------
 
 const router = useRouter();
+const route = useRoute();
 
-let wordGeneration = randomWords(1);
-let word = wordGeneration[0];
+const difficulty = route.params.difficulty;
+
 let alphabetRef = ref(['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']);
 let answerLetters: string[] = [];
 let findLettersRef = ref<Array<string>>([]);
 let errorRef = ref(0);
+let wordGeneration = randomWords(1);
+let minLength = 4;
+
+// ----------------------------------------
+// 					Logic
+// ----------------------------------------
+
+switch(difficulty){
+    case 'medium':
+        minLength = 6;
+        break;
+    case 'hard':
+        minLength = 8;
+        break;
+    default:
+        break;
+}
+
+while(wordGeneration[0].length < minLength){
+    wordGeneration = randomWords(1);
+}
+
+let word = wordGeneration[0];
 
 for (let index = 0; index < word.length; index++) {
     answerLetters.push(word[index]);
     findLettersRef.value.push("_");
 }
+
+// Number of clues
+minLength = 3;
+
+switch(difficulty){
+    case 'medium':
+        minLength = 2;
+        break;
+    case 'hard':
+        minLength = 1;
+        break;
+    default:
+        break;
+}
+
+// Setting up clues
+for (let index = 0; index < minLength; index++) {
+
+    let random = getRandomInt(word.length);
+
+    while(findLettersRef.value[random] != '_'){
+        random = getRandomInt(word.length);
+    }
+
+    let clueLetter = word.charAt(random);
+
+    for (let index2 = 0; index2 < word.length; index2++) {
+        if(word[index2] == clueLetter){
+            findLettersRef.value[index2] = word[index2];
+        }
+    }
+
+    for(let index2 in alphabetRef.value){
+        if(alphabetRef.value[index2] == clueLetter){
+            alphabetRef.value[index2] = ' ';
+        }
+        break;
+    }
+}
+
+// Verify is clues doesn't give the complete word
+let isAlreadyCompleted = true;
+for(const ind in findLettersRef.value){
+    if(findLettersRef.value[ind] == '_'){
+        isAlreadyCompleted = false;
+    }
+}
+if(isAlreadyCompleted) retry();
+
+// ----------------------------------------
+// 				  Functions
+// ----------------------------------------
 
 function verifyLetter(letter: string, pos: number) {
     if(alphabetRef.value[pos] != ' '){
@@ -88,6 +173,10 @@ function retry(){
 
 function menu(){
     router.push("/");
+}
+
+function getRandomInt(max: number) {
+  return Math.floor(Math.random() * max);
 }
 
 
