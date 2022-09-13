@@ -1,7 +1,7 @@
 <template>
     <div class="hero min-h-screen bg-base-200">
         <div class="hero-content text-center">
-                <div class="max-w-md">
+                <div class="max-w-md -mt-40">
                     <h1 class="text-5xl font-bold m-10">Save Him !</h1>
                     <button @click="game('easy')" class="btn btn-primary mr-3">
                         Easy

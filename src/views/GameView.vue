@@ -1,6 +1,16 @@
 <template>
     <div class="absolute top-0 right-0 m-10"> Error(s) : {{ errorRef }}</div>
 
+    <input v-model="showModal" type="checkbox" id="my-modal-4" class="modal-toggle" />
+    <label for="my-modal-4" class="modal cursor-pointer">
+    <label class="modal-box relative" for="">
+        <h3 v-if="errorRef < errorAllowedRef" class="text-lg font-bold">You win !</h3>
+        <h3 v-else class="text-lg font-bold">You lose ..</h3>
+        <p v-if="errorRef < errorAllowedRef" class="py-4">You've made {{ errorRef }} error(s)</p>
+        <p v-else class="py-4">The word was {{ word }}.</p>
+    </label>
+    </label>
+
     <div class="grid content-center w-screen h-screen">
         <div class="flex justify-center m-5 mt-10">
             <div class="m-5" v-for="lesson in findLettersRef">{{lesson}}</div>
@@ -70,9 +80,11 @@ const difficulty = route.params.difficulty;
 let alphabetRef = ref(['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']);
 let answerLetters: string[] = [];
 let findLettersRef = ref<Array<string>>([]);
-let errorRef = ref(0);
 let wordGeneration = randomWords(1);
 let minLength = 4;
+let showModal = ref(false);
+let errorRef = ref(0);
+let errorAllowedRef = ref(15);
 
 // ----------------------------------------
 // 					Logic
@@ -80,9 +92,11 @@ let minLength = 4;
 
 switch(difficulty){
     case 'medium':
+        errorAllowedRef.value = 10;
         minLength = 6;
         break;
     case 'hard':
+        errorAllowedRef.value = 5;
         minLength = 8;
         break;
     default:
@@ -140,13 +154,7 @@ for (let index = 0; index < minLength; index++) {
 }
 
 // Verify is clues doesn't give the complete word
-let isAlreadyCompleted = true;
-for(const ind in findLettersRef.value){
-    if(findLettersRef.value[ind] == '_'){
-        isAlreadyCompleted = false;
-    }
-}
-if(isAlreadyCompleted) retry();
+if(isCompleted()) retry();
 
 // ----------------------------------------
 // 				  Functions
@@ -162,9 +170,22 @@ function verifyLetter(letter: string, pos: number) {
             }
         }else{
             errorRef.value++;
+            if(errorRef.value > errorAllowedRef.value) showModal.value = true;
         }
         alphabetRef.value[pos] = ' ';
     }
+    if(isCompleted()) showModal.value = true;
+}
+
+function isCompleted(){
+    let isAlreadyCompleted = true;
+    for(const ind in findLettersRef.value){
+        if(findLettersRef.value[ind] == '_'){
+            return false;
+        }
+    }
+    return true;
+
 }
 
 function retry(){
