@@ -173,8 +173,8 @@ function verifyLetter(letter: string, pos: number) {
             if(errorRef.value > errorAllowedRef.value) showModal.value = true;
         }
         alphabetRef.value[pos] = ' ';
+        if(isCompleted()) showModal.value = true;
     }
-    if(isCompleted()) showModal.value = true;
 }
 
 function isCompleted(){
