@@ -7,7 +7,7 @@
         <h3 v-if="errorRef < errorAllowedRef" class="text-lg font-bold">You win !</h3>
         <h3 v-else class="text-lg font-bold">You lose ..</h3>
         <p v-if="errorRef < errorAllowedRef" class="py-4">You've made {{ errorRef }} error(s)</p>
-        <p v-else class="py-4">The word was {{ word }}.</p>
+        <p v-else class="py-4">The word was {{ wordRef }}.</p>
     </label>
     </label>
 
@@ -51,7 +51,7 @@
         </div>
         <div class="flex items-center justify-center gap-10 mt-10">
             <button @click="menu()" class="btn btn-primary btn-xs sm:btn-sm md:btn-md lg:btn-lg">Menu</button>
-            <button @click="retry()" class="btn btn-primary btn-xs sm:btn-sm md:btn-md lg:btn-lg">Retry</button>
+            <button @click="launchGame()" class="btn btn-primary btn-xs sm:btn-sm md:btn-md lg:btn-lg">Retry</button>
         </div>
     </div>
 
@@ -75,90 +75,103 @@ import { useRouter, useRoute } from 'vue-router';
 const router = useRouter();
 const route = useRoute();
 
-const difficulty = route.params.difficulty;
-
 let alphabetRef = ref(['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']);
 let answerLetters: string[] = [];
 let findLettersRef = ref<Array<string>>([]);
-let wordGeneration = randomWords(1);
-let minLength = 4;
 let showModal = ref(false);
 let errorRef = ref(0);
-let errorAllowedRef = ref(15);
+let errorAllowedRef = ref(0);
+let wordRef = ref("");
 
 // ----------------------------------------
 // 					Logic
 // ----------------------------------------
 
-switch(difficulty){
-    case 'medium':
-        errorAllowedRef.value = 10;
-        minLength = 6;
-        break;
-    case 'hard':
-        errorAllowedRef.value = 5;
-        minLength = 8;
-        break;
-    default:
-        break;
-}
-
-while(wordGeneration[0].length < minLength){
-    wordGeneration = randomWords(1);
-}
-
-let word = wordGeneration[0];
-
-for (let index = 0; index < word.length; index++) {
-    answerLetters.push(word[index]);
-    findLettersRef.value.push("_");
-}
-
-// Number of clues
-minLength = 3;
-
-switch(difficulty){
-    case 'medium':
-        minLength = 2;
-        break;
-    case 'hard':
-        minLength = 1;
-        break;
-    default:
-        break;
-}
-
-// Setting up clues
-for (let index = 0; index < minLength; index++) {
-
-    let random = getRandomInt(word.length);
-
-    while(findLettersRef.value[random] != '_'){
-        random = getRandomInt(word.length);
-    }
-
-    let clueLetter = word.charAt(random);
-
-    for (let index2 = 0; index2 < word.length; index2++) {
-        if(word[index2] == clueLetter){
-            findLettersRef.value[index2] = word[index2];
-        }
-    }
-
-    for(let index2 in alphabetRef.value){
-        if(alphabetRef.value[index2] == clueLetter){
-            alphabetRef.value[index2] = ' ';
-            break;
-        }
-    }
-}
-
-// Verify is clues doesn't give the complete word
-if(isCompleted()) retry();
+launchGame();
 
 // ----------------------------------------
 // 				  Functions
 // ----------------------------------------
+
+function launchGame(){
+
+    const difficulty = route.params.difficulty;
+    let minLength = 4;
+    let wordGeneration = randomWords(1);
+
+    alphabetRef.value = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'];
+    answerLetters = [];
+    findLettersRef.value = [];
+    showModal.value = false;
+    errorRef.value = 0;
+    errorAllowedRef.value = 15;
+
+    switch(difficulty){
+        case 'medium':
+            errorAllowedRef.value = 10;
+            minLength = 6;
+            break;
+        case 'hard':
+            errorAllowedRef.value = 5;
+            minLength = 8;
+            break;
+        default:
+            break;
+    }
+
+    while(wordGeneration[0].length < minLength){
+        wordGeneration = randomWords(1);
+    }
+
+    wordRef.value = wordGeneration[0];
+
+    for (let index = 0; index < wordRef.value.length; index++) {
+        answerLetters.push(wordRef.value[index]);
+        findLettersRef.value.push("_");
+    }
+
+    // Number of clues
+    minLength = 3;
+
+    switch(difficulty){
+        case 'medium':
+            minLength = 2;
+            break;
+        case 'hard':
+            minLength = 1;
+            break;
+        default:
+            break;
+    }
+
+    // Setting up clues
+    for (let index = 0; index < minLength; index++) {
+
+        let random = getRandomInt(wordRef.value.length);
+
+        while(findLettersRef.value[random] != '_'){
+            random = getRandomInt(wordRef.value.length);
+        }
+
+        let clueLetter = wordRef.value.charAt(random);
+
+        for (let index2 = 0; index2 < wordRef.value.length; index2++) {
+            if(wordRef.value[index2] == clueLetter){
+                findLettersRef.value[index2] = wordRef.value[index2];
+            }
+        }
+
+        for(let index2 in alphabetRef.value){
+            if(alphabetRef.value[index2] == clueLetter){
+                alphabetRef.value[index2] = ' ';
+                break;
+            }
+        }
+    }
+
+    // Verify is clues doesn't give the complete word
+    if(isCompleted()) launchGame();
+}
 
 function verifyLetter(letter: string, pos: number) {
     if(alphabetRef.value[pos] != ' '){
@@ -178,7 +191,6 @@ function verifyLetter(letter: string, pos: number) {
 }
 
 function isCompleted(){
-    let isAlreadyCompleted = true;
     for(const ind in findLettersRef.value){
         if(findLettersRef.value[ind] == '_'){
             return false;
@@ -186,10 +198,6 @@ function isCompleted(){
     }
     return true;
 
-}
-
-function retry(){
-    router.go(0);
 }
 
 function menu(){
